@@ -1,0 +1,22 @@
+require('dotenv').config();
+const path = require('node:path');
+const express = require('express');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const clubsRouter = require('./routes/clubs');
+const app = express();
+const port = Number(process.env.PORT) || 3000;
+app.disable('x-powered-by');
+app.use(helmet({ contentSecurityPolicy: { directives: { defaultSrc: ["'self'"], styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'], fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'], scriptSrc: ["'self'"], imgSrc: ["'self'", 'data:'], connectSrc: ["'self'"] } } }));
+app.use(express.json({ limit: '20kb' }));
+app.use('/api/', rateLimit({ windowMs: 15 * 60 * 1000, limit: 250, standardHeaders: 'draft-8', legacyHeaders: false, message: { error: 'Too many requests. Please wait a little and try again.' } }));
+app.get('/api/health', (req, res) => res.json({ status: 'ok', service: 'campus-club-directory-api' }));
+app.use('/api/clubs', clubsRouter);
+app.use(express.static(path.join(__dirname, '..', 'frontend')));
+app.use('/api', (req, res) => res.status(404).json({ error: 'API endpoint not found.' }));
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && 'body' in err) return res.status(400).json({ error: 'Request body contains invalid JSON.' });
+  console.error('Unhandled server error:', err.message);
+  res.status(500).json({ error: 'Unexpected server error.' });
+});
+app.listen(port, () => console.log(`Campus Club Directory running at http://localhost:${port}`));

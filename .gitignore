@@ -1,0 +1,17 @@
+
+# Dependencies and secrets
+node_modules/
+backend/node_modules/
+backend/.env
+backend/.env.*
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+.vscode/
+
+# Local exports and backups
+*.dump
+*.sql.bak
+campus-club-directory/
